@@ -1,9 +1,9 @@
-// HomeActivity.java — ВСЕ ГРУЗЫ ДЛЯ ВСЕХ
 package com.example.seacargoapp;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,11 +13,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.seacargoapp.CargoAdapter;
-import com.example.seacargoapp.CargoApi;
 import com.example.seacargoapp.models.Cargo;
+import com.example.seacargoapp.CargoApi;
 import com.example.seacargoapp.SupabaseClient;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import java.util.List;
 
@@ -29,7 +28,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private RecyclerView recyclerCargo;
     private ProgressBar progressHome;
-    private TextView tvEmpty;
+    private View emptyView;
+    private TextView tvWelcome;
     private CargoAdapter adapter;
     private CargoApi cargoApi;
 
@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hom);
 
-        // Toolbar + выход
+        // Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         findViewById(R.id.tvLogout).setOnClickListener(v -> logout());
@@ -46,71 +46,65 @@ public class HomeActivity extends AppCompatActivity {
         // Views
         recyclerCargo = findViewById(R.id.recyclerCargo);
         progressHome = findViewById(R.id.progressHome);
-        tvEmpty = findViewById(R.id.tvEmpty);
-        FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
+        emptyView = findViewById(R.id.emptyView);
+        tvWelcome = findViewById(R.id.tvWelcome);
+        ExtendedFloatingActionButton fabAdd = findViewById(R.id.fabAdd);
 
-        // RecyclerView
+        SharedPreferences prefs = getSharedPreferences("user_session", MODE_PRIVATE);
+        String username = prefs.getString("username", "Друг");
+        tvWelcome.setText("Привет, " + username + "!");
+
         adapter = new CargoAdapter();
         recyclerCargo.setLayoutManager(new LinearLayoutManager(this));
         recyclerCargo.setAdapter(adapter);
 
-        // API
         cargoApi = SupabaseClient.getClient().create(CargoApi.class);
 
-        // Кнопка добавления (пока тост)
         fabAdd.setOnClickListener(v ->
-                Toast.makeText(this, "Добавление груза — скоро!", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, "Добавление груза — скоро будет!", Toast.LENGTH_SHORT).show());
 
-        // Загружаем ВСЕ грузы
         loadAllCargo();
     }
 
     private void loadAllCargo() {
-        progressHome.setVisibility(android.view.View.VISIBLE);
-        tvEmpty.setVisibility(android.view.View.GONE);
+        progressHome.setVisibility(View.VISIBLE);
+        emptyView.setVisibility(View.GONE);
+        recyclerCargo.setVisibility(View.VISIBLE);
 
-        // ←←← ВОТ ЭТА СТРОКА — ГЛАВНОЕ ИЗМЕНЕНИЕ ←←←
         cargoApi.getAllCargo().enqueue(new Callback<List<Cargo>>() {
             @Override
             public void onResponse(Call<List<Cargo>> call, Response<List<Cargo>> response) {
-                progressHome.setVisibility(android.view.View.GONE);
+                progressHome.setVisibility(View.GONE);
 
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Cargo> list = response.body();
+                    List<Cargo> cargos = response.body();
+                    adapter.updateData(cargos);
 
-                    adapter.updateData(list);
-
-                    if (list.isEmpty()) {
-                        tvEmpty.setText("В базе пока нет грузов");
-                        tvEmpty.setVisibility(android.view.View.VISIBLE);
-                    } else {
-                        tvEmpty.setVisibility(android.view.View.GONE);
+                    if (cargos.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        recyclerCargo.setVisibility(View.GONE);
                     }
-
-                    Toast.makeText(HomeActivity.this,
-                            "Загружено грузов: " + list.size(), Toast.LENGTH_SHORT).show();
                 } else {
-                    tvEmpty.setVisibility(android.view.View.VISIBLE);
-                    Toast.makeText(HomeActivity.this,
-                            "Ошибка: " + response.code(), Toast.LENGTH_LONG).show();
+                    emptyView.setVisibility(View.VISIBLE);
+                    recyclerCargo.setVisibility(View.GONE);
+                    Toast.makeText(HomeActivity.this, "Ошибка загрузки", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<Cargo>> call, Throwable t) {
-                progressHome.setVisibility(android.view.View.GONE);
-                tvEmpty.setVisibility(android.view.View.VISIBLE);
-                Toast.makeText(HomeActivity.this,
-                        "Нет интернета: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                progressHome.setVisibility(View.GONE);
+                emptyView.setVisibility(View.VISIBLE);
+                recyclerCargo.setVisibility(View.GONE);
+                Toast.makeText(HomeActivity.this, "Нет интернета", Toast.LENGTH_LONG).show();
             }
         });
     }
 
     private void logout() {
         getSharedPreferences("user_session", MODE_PRIVATE).edit().clear().apply();
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        startActivity(new Intent(this, LoginActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK));
         finish();
     }
 

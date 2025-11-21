@@ -35,7 +35,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void register() {
         String username = etUsername.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
-        String pass = etPassword.getText().toString();
+        String pass = etPassword.getText().toString().trim();
 
         if (username.isEmpty() || email.isEmpty() || pass.length() < 6) {
             Toast.makeText(this, "Проверьте данные (пароль ≥6)", Toast.LENGTH_LONG).show();
@@ -44,19 +44,25 @@ public class RegisterActivity extends AppCompatActivity {
 
         Users newUser = new Users(username, email, pass);
 
-        api.registerUser(newUser).enqueue(new Callback<java.util.List<Users>>() {
+        api.registerUser(newUser).enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<java.util.List<Users>> call, Response<java.util.List<Users>> response) {
-                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // 200–299 = всё ок, пользователь создан
                     Toast.makeText(RegisterActivity.this, "Регистрация успешна!", Toast.LENGTH_LONG).show();
                     finish();
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Ошибка (возможно email уже занят)", Toast.LENGTH_LONG).show();
+                    // Здесь уже точно ошибка (409, 400 и т.д.)
+                    if (response.code() == 409) {
+                        Toast.makeText(RegisterActivity.this, "Пользователь с таким логином/email уже существует", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Ошибка: " + response.code() + " " + response.message(), Toast.LENGTH_LONG).show();
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<java.util.List<Users>> call, Throwable t) {
+            public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(RegisterActivity.this, "Нет сети: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });

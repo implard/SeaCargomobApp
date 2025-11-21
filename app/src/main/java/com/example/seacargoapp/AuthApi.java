@@ -12,21 +12,19 @@ import retrofit2.http.Query;
 
 public interface AuthApi {
 
-    // Вход по username
     @Headers({
-            "apikey: " + com.example.seacargoapp.SupabaseClient.API_KEY,
-            "Authorization: " + com.example.seacargoapp.SupabaseClient.AUTH_HEADER
-    })
-    @GET("users?select=*")
-    Call<List<Users>> getUserByUsername(@Query("username") String usernameEq);
-
-    // Регистрация (остаётся как есть)
-    @Headers({
-            "apikey: " + com.example.seacargoapp.SupabaseClient.API_KEY,
-            "Authorization: " + com.example.seacargoapp.SupabaseClient.AUTH_HEADER,
+            "apikey: " + SupabaseClient.API_KEY,
+            "Authorization: " + SupabaseClient.AUTH_HEADER,
             "Content-Type: application/json",
-            "Prefer: return=representation"
+            "Prefer: return=minimal"
     })
     @POST("users")
-    Call<List<Users>> registerUser(@Body Users user);
+    Call<Void> registerUser(@Body Users user);
+
+    @Headers({
+            "apikey: " + SupabaseClient.API_KEY,
+            "Authorization: " + SupabaseClient.AUTH_HEADER
+    })
+    @GET("users?select=*")
+    Call<List<Users>> getUserByUsername(@Query("username") String username);
 }
