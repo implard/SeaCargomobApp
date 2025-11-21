@@ -1,3 +1,4 @@
+// api/AuthApi.java
 package com.example.seacargoapp;
 
 import com.example.seacargoapp.models.Users;
@@ -11,17 +12,18 @@ import retrofit2.http.Query;
 
 public interface AuthApi {
 
+    // Вход по username
     @Headers({
-            "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xndWd5YWdzc2d5ampkdGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2ODU1NTcsImV4cCI6MjA3OTI2MTU1N30.mhERHLRVpHpUk_CAhXHkggA66P12Z5vkFZd9wzTnAB8",
-            "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xndWd5YWdzc2d5ampkdGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2ODU1NTcsImV4cCI6MjA3OTI2MTU1N30.mhERHLRVpHpUk_CAhXHkggA66P12Z5vkFZd9wzTnAB8",
-            "Content-Type: application/json"
+            "apikey: " + com.example.seacargoapp.SupabaseClient.API_KEY,
+            "Authorization: " + com.example.seacargoapp.SupabaseClient.AUTH_HEADER
     })
-    @GET("users")
-    Call<List<Users>> getUserByEmail(@Query("email") String email);
+    @GET("users?select=*")
+    Call<List<Users>> getUserByUsername(@Query("username") String usernameEq);
 
+    // Регистрация (остаётся как есть)
     @Headers({
-            "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xndWd5YWdzc2d5ampkdGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2ODU1NTcsImV4cCI6MjA3OTI2MTU1N30.mhERHLRVpHpUk_CAhXHkggA66P12Z5vkFZd9wzTnAB8",
-            "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtvb2xndWd5YWdzc2d5ampkdGp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2ODU1NTcsImV4cCI6MjA3OTI2MTU1N30.mhERHLRVpHpUk_CAhXHkggA66P12Z5vkFZd9wzTnAB8",
+            "apikey: " + com.example.seacargoapp.SupabaseClient.API_KEY,
+            "Authorization: " + com.example.seacargoapp.SupabaseClient.AUTH_HEADER,
             "Content-Type: application/json",
             "Prefer: return=representation"
     })
